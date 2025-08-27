@@ -1,6 +1,33 @@
 # I Finally Understood When to Use Lakehouses: A Comprehensive Guide
 
 After years of wrestling with data warehouses, data lakes, and the endless ETL pipelines between them, I had my "aha moment" about lakehouses. It wasn't just another buzzword—it was the solution to problems I didn't even realize I was solving the hard way.
+My AHA moment came about after attending Databricks event in their Amsterdam office, where DuckDB, LanceDB and Delta contributors explained how the ecosystem interconnects.
+
+## The Ecosystem Interconnections: How It All Works Together
+
+Understanding how these technologies connect is crucial. Here are key insights from the contributors:
+
+### DuckDB's Lakehouse Vision
+The DuckDB team recently introduced [DuckLake](https://duckdb.org/2025/05/27/ducklake.html), their take on lakehouse architecture. As they explain, traditional formats like Iceberg and Delta Lake have fundamental flaws in metadata management. DuckLake solves this by:
+- Using standard SQL databases (like PostgreSQL) for metadata instead of complex file systems
+- Maintaining data in open Parquet format for compatibility
+- Providing [native Iceberg REST catalog support](https://duckdb.org/2025/03/14/preview-amazon-s3-tables.html) for ecosystem interoperability
+
+### Delta Lake's Universal Format Strategy
+Delta Lake addresses ecosystem fragmentation through [Universal Format (UniForm)](https://delta.io/blog/unifying-open-table/), which enables:
+- Writing data once as Delta Lake
+- Reading the same data as Apache Iceberg or Hudi
+- Zero data duplication across formats
+- True format agnostic lakehouses
+
+The Delta team explains: *"Organizations are choosing open table formats because they offer the freedom to use any engine on a single copy of data. UniForm and XTable take advantage of the fact that Delta Lake, Iceberg, and Hudi all consist of a metadata layer built on Apache Parquet data files."*
+
+### LanceDB's AI-Native Integration
+LanceDB bridges traditional analytics and AI workloads through [native ecosystem integration](https://blog.lancedb.com/the-future-of-open-source-table-formats-iceberg-and-lance/). Their approach complements rather than replaces existing formats:
+- **For structured analytics**: Use Iceberg/Delta Lake with DuckDB/Spark
+- **For vector/multimodal workloads**: Use Lance format with LanceDB# I Finally Understood When to Use Lakehouses: A Comprehensive Guide
+
+After years of wrestling with data warehouses, data lakes, and the endless ETL pipelines between them, I had my "aha moment" about lakehouses. It wasn't just another buzzword—it was the solution to problems I didn't even realize I was solving the hard way.
 
 ## The Problem: The False Choice Between Lakes and Warehouses
 
@@ -107,7 +134,7 @@ Raw Data → Lakehouse (S3 + Iceberg + Multiple Engines)
 
 ## The Technical Breakthrough: Composable Table Formats
 
-The magic happens at the **table format layer**. Apache Iceberg (and competitors like Delta Lake) provide:
+The magic happens at the **table format layer**. Apache Iceberg, [Delta Lake](https://delta.io/), and the emerging [DuckLake format](https://duckdb.org/2025/05/27/ducklake.html) provide:
 
 ### ACID Transactions
 ```sql
@@ -147,10 +174,7 @@ This enables **massive query speedups** through predicate pushdown and file skip
 Here's where it gets exciting. Modern lakehouses don't just handle tables—they're built for the **multimodal AI era**.
 
 ### Lance Format: The New Kid on the Block
-[LanceDB](https://lancedb.com/) introduces the Lance format, optimized for:
-- **Vector embeddings** (for similarity search)
-- **Nested data structures** (JSON, arrays, structs)
-- **Random access patterns** (unlike Parquet's scan-optimized design)
+[LanceDB](https://lancedb.com/) introduces the Lance format, optimized for AI-native workloads. As explained in their [comprehensive analysis of table format evolution](https://blog.lancedb.com/the-future-of-open-source-table-formats-iceberg-and-lance/), Lance provides capabilities that complement traditional formats like Iceberg:
 
 ```python
 # Store multimodal data in Lance format
@@ -158,14 +182,14 @@ import lancedb
 
 db = lancedb.connect("s3://my-bucket/vector-store")
 table = db.create_table("products", [
-    {"id": 1, "name": "iPhone", "image_vector": [0.1, 0.2, ...], 
+    {"id": 1, "name": "iPhone", "image_vector": [0.1, 0.2, 0.3], 
      "description": "Latest smartphone"},
-    {"id": 2, "name": "MacBook", "image_vector": [0.3, 0.4, ...], 
+    {"id": 2, "name": "MacBook", "image_vector": [0.3, 0.4, 0.5], 
      "description": "Powerful laptop"}
 ])
 
 # Semantic search across products
-results = table.search([0.15, 0.25, ...]).limit(10).to_pandas()
+results = table.search([0.15, 0.25, 0.35]).limit(10).to_pandas()
 ```
 
 ### Preparing Datasets for LLM Training
@@ -211,7 +235,7 @@ After all this exploration, here's my framework for **when lakehouses make sense
 ## The Tools Landscape: Choosing Your Stack
 
 ### For SQL-Heavy Workloads
-- **[DuckDB](https://duckdb.org/)**: Embedded analytics, lightning-fast queries
+- **[DuckDB](https://duckdb.org/)**: Embedded analytics, lightning-fast queries. DuckDB's team explains their [unified lakehouse approach](https://motherduck.com/blog/open-lakehouse-stack-duckdb-table-formats/) and new [DuckLake format](https://duckdb.org/2025/05/27/ducklake.html)
 - **Apache Spark**: Distributed processing, mature ecosystem
 - **Databricks**: Managed platform, great for teams
 
@@ -221,7 +245,7 @@ After all this exploration, here's my framework for **when lakehouses make sense
 - **Custom pipelines**: When you need full control
 
 ### For Vector/Embedding Workloads
-- **[LanceDB](https://lancedb.com/)**: Native vector support, integrated with Lance format
+- **[LanceDB](https://lancedb.com/)**: Native vector support, integrated with Lance format. Their [ecosystem integration guide](https://blog.lancedb.com/why-dataframe-libraries-need-to-understand-vector-embeddings-291343efd5c8/) shows how it connects with traditional data lakes
 - **Traditional vector DBs**: Pinecone, Weaviate for specialized use cases
 
 ## The Future: Composability Is King
